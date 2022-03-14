@@ -11,42 +11,27 @@ SUPPORTED_LIBRARIES = {
                 "footprint-nameformat": "MXOnly-{:g}U-NoLED",
                 "iso-enter": "MXOnly-ISO",
             },
-            "Alps": {
-                "name": "Alps_Only",
-                "footprint-nameformat": "ALPS-{:g}U",
-            },
+            "Alps": {"name": "Alps_Only", "footprint-nameformat": "ALPS-{:g}U",},
             "MX/Alps Hybrid": {
                 "name": "MX_Alps_Hybrid",
                 "footprint-nameformat": "MX-{:g}U-NoLED",
                 "iso-enter": "MX-ISO",
             },
         },
-        "supported-widths": [
-            1,
-            1.25,
-            1.5,
-            1.75,
-            2,
-            2.25,
-            2.5,
-            2.75,
-            3,
-            6,
-            6.25,
-            6.5,
-            7,
-            8,
-            9,
-            10,
-        ],
+        "supported-widths": [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 6, 6.25, 6.5, 7, 8, 9, 10,],
     },
     "perigoso/keyswitch-kicad-library": {
         "source": "https://github.com/perigoso/keyswitch-kicad-library",
         "modules": {
             "MX": {
-                "name": "Switch_Keyboard_Cherry_MX",
-                "footprint-nameformat": "SW_Cherry_MX_PCB_{:.2f}u",
-                "iso-enter": "SW_Cherry_MX_PCB_ISOEnter",
+                "name": "Button_Switch_Keyboard",
+                "footprint-nameformat": "SW_Cherry_MX_{:.2f}u_PCB",
+                "iso-enter": "SW_Cherry_MX_ISOEnter_PCB",
+            },
+            "Hotswap": {
+                "name": "Switch_Keyboard_Hotswap_Kailh",
+                "footprint-nameformat": "SW_Hotswap_Kailh_MX_plated_{:.2f}u",
+                "iso-enter": "SW_Hotswap_Kailh_MX_plated_ISOEnter",
             },
             "Alps": {
                 "name": "Switch_Keyboard_Alps_Matias",
@@ -109,29 +94,23 @@ ATMEGA32U4AU_PIN_ASSIGN_ORDER = [
     "PF7",
 ]
 
+ELITEC_PIN_ASSIGN_ORDER = [i for i in range(1, 29) if i not in [2, 3, 21, 22, 23, 24]]
+PROMICRO_PIN_ASSIGN_ORDER = [i for i in range(1, 24) if i not in [2, 3, 21, 22, 23, 24]]
+
 
 def is_iso_enter(key):
     key_width = float(key["width"])
     key_height = float(key["height"])
     key_width_2 = float(key["width2"])
     key_height_2 = float(key["height2"])
-    return (
-        key_width == 1.25
-        and key_height == 2
-        and key_width_2 == 1.5
-        and key_height_2 == 1
-    )
+    return key_width == 1.25 and key_height == 2 and key_width_2 == 1.5 and key_height_2 == 1
 
 
 def add_stabilizer(reference, key_width):
-    stabilizer_footprint = (
-        "Mounting_Keyboard_Stabilizer:Stabilizer_Cherry_MX_{:d}u".format(
-            math.trunc(key_width)
-        )
+    stabilizer_footprint = "Mounting_Keyboard_Stabilizer:Stabilizer_Cherry_MX_{:d}u".format(
+        math.trunc(key_width)
     )
-    stabilizer = skidl.Part(
-        "Mechanical", "MountingHole", footprint=stabilizer_footprint
-    )
+    stabilizer = skidl.Part("Mechanical", "MountingHole", footprint=stabilizer_footprint)
     stabilizer.ref = reference
 
 
@@ -149,16 +128,9 @@ def add_iso_enter_switch(switch_module):
     switch = skidl.Part("Switch", "SW_Push", footprint=switch_footprint)
     diode = skidl.Part("Device", "D", footprint="Diode_SMD:D_SOD-323F")
 
-    if (
-        module_name == "Switch_Keyboard_Cherry_MX"
-        or module_name == "Switch_Keyboard_Hybrid"
-    ):
-        stabilizer_footprint = (
-            "Mounting_Keyboard_Stabilizer:Stabilizer_Cherry_MX_2u"
-        )
-        stabilizer = skidl.Part(
-            "Mechanical", "MountingHole", footprint=stabilizer_footprint
-        )
+    if module_name == "Switch_Keyboard_Cherry_MX" or module_name == "Switch_Keyboard_Hybrid":
+        stabilizer_footprint = "Mounting_Keyboard_Stabilizer:Stabilizer_Cherry_MX_2u"
+        stabilizer = skidl.Part("Mechanical", "MountingHole", footprint=stabilizer_footprint)
         switch_reference_number = switch.ref[2:]
         stabilizer.ref = f"ST{switch_reference_number}"
 
@@ -173,11 +145,10 @@ def add_regular_switch(switch_module, key_width):
     switch_footprint = f"{module_name}:{switch_footprint}"
 
     switch = skidl.Part("Switch", "SW_Push", footprint=switch_footprint)
-    diode = skidl.Part("Device", "D", footprint="Diode_SMD:D_SOD-323F")
+    diode = skidl.Part("Diode", "1N4148WS", footprint="Diode_SMD:D_SOD-323F")
 
     if (
-        module_name == "Switch_Keyboard_Cherry_MX"
-        or module_name == "Switch_Keyboard_Hybrid"
+        module_name == "Switch_Keyboard_Cherry_MX" or module_name == "Switch_Keyboard_Hybrid"
     ) and key_width >= 2:
         switch_reference_number = switch.ref[2:]
         add_stabilizer(f"ST{switch_reference_number}", key_width)
@@ -190,11 +161,11 @@ def handle_switch_matrix(keys, switch_module, supported_widths):
     columns = {}
 
     for key in keys:
-        labels = key["labels"]
-        if not labels:
+        profile = key["profile"]
+        if not profile:
             raise RuntimeError("Key label for matrix position missing")
 
-        row, column = map(int, labels[0].split(","))
+        row, column = map(int, profile.split(","))
         if not row in rows:
             rows[row] = skidl.Net(f"ROW{row}")
         if not column in columns:
@@ -217,24 +188,12 @@ def handle_switch_matrix(keys, switch_module, supported_widths):
 
 def add_controller_atmega32u4_au_v1():
     # create templates
-    C = skidl.Part(
-        "Device",
-        "C",
-        skidl.TEMPLATE,
-        footprint="Capacitor_SMD:C_0603_1608Metric",
-    )
-    R = skidl.Part(
-        "Device",
-        "R",
-        skidl.TEMPLATE,
-        footprint="Resistor_SMD:R_0603_1608Metric",
-    )
+    C = skidl.Part("Device", "C", skidl.TEMPLATE, footprint="Capacitor_SMD:C_0603_1608Metric",)
+    R = skidl.Part("Device", "R", skidl.TEMPLATE, footprint="Resistor_SMD:R_0603_1608Metric",)
 
     # start uc circuitry
     uc = skidl.Part(
-        "MCU_Microchip_ATmega",
-        "ATmega32U4-AU",
-        footprint="Package_QFP:TQFP-44_10x10mm_P0.8mm",
+        "MCU_Microchip_ATmega", "ATmega32U4-AU", footprint="Package_QFP:TQFP-44_10x10mm_P0.8mm",
     )
     vcc = skidl.Net("VCC")
     gnd = skidl.Net("GND")
@@ -244,9 +203,7 @@ def add_controller_atmega32u4_au_v1():
 
     # crystal oscillator
     crystal = skidl.Part(
-        "Device",
-        "Crystal_GND24",
-        footprint="Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm",
+        "Device", "Crystal_GND24", footprint="Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm",
     )
     c1, c2 = C(num_copies=2, value="22p")
 
@@ -308,10 +265,7 @@ def add_controller_atmega32u4_au_v1():
     # pe2 and reset
     r3, r4 = R(num_copies=2, value="10k")
     button = skidl.Part(
-        "Switch",
-        "SW_SPST",
-        footprint="Button_Switch_SMD:SW_SPST_TL3342",
-        ref="RST",
+        "Switch", "SW_SPST", footprint="Button_Switch_SMD:SW_SPST_TL3342", ref="RST",
     )
 
     net_hwb = skidl.Net("mcu/~HWB~/PE2")
@@ -327,8 +281,20 @@ def add_controller_atmega32u4_au_v1():
 
 
 def add_controller_circuit(variant, rows, columns):
-    uc = add_controller_atmega32u4_au_v1()
-    pins = ATMEGA32U4AU_PIN_ASSIGN_ORDER[:]
+    if variant == "atmega32u4_au_v1":
+        uc = add_controller_atmega32u4_au_v1()
+        pins = ATMEGA32U4AU_PIN_ASSIGN_ORDER[:]
+    elif variant == "elite-c":
+        uc = skidl.Part("keebio.lib", "Elite-C", footprint="Keebio-Parts:Elite-C", ref="U")
+        pins = ELITEC_PIN_ASSIGN_ORDER[:]
+    elif variant == "promicro":
+        uc = skidl.Part(
+            "keebio.lib", "ProMicro", footprint="Keebio-Parts:ArduinoProMicro", ref="U"
+        )
+        pins = PROMICRO_PIN_ASSIGN_ORDER[:]
+    else:
+        raise ValueError(f"{variant} is not a suitable controller.")
+
     for _, row in rows.items():
         row += uc[pins.pop(0)]
     for _, column in columns.items():
@@ -352,12 +318,11 @@ def build_circuit(layout, **kwargs):
     except KeyError as err:
         raise RuntimeError("Unsupported argument") from err
 
-    rows, columns = handle_switch_matrix(
-        layout["keys"], switch_module, supported_widths
-    )
+    rows, columns = handle_switch_matrix(layout["keys"], switch_module, supported_widths)
 
-    if kwargs.get("controller_circuit"):
-        add_controller_circuit("atmega32u4_au_v1", rows, columns)
+    controller = kwargs.get("controller_circuit")
+    if controller:
+        add_controller_circuit(controller, rows, columns)
 
 
 def generate_netlist(output, netlist_type="net"):

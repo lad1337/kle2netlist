@@ -33,9 +33,7 @@ console = Console()
 def version_callback(value: bool):
     """Prints the version of the package."""
     if value:
-        console.print(
-            f"[yellow]kle2netlist[/] version: [bold blue]{__version__}[/]"
-        )
+        console.print(f"[yellow]kle2netlist[/] version: [bold blue]{__version__}[/]")
         raise typer.Exit()
 
 
@@ -45,14 +43,9 @@ def main(
     output: str = typer.Option(
         ".", "--output-dir", help="Output directory, created if not existing"
     ),
-    name: str = typer.Option(
-        "keyboard", "--name", help="Netlist name without file extension"
-    ),
+    name: str = typer.Option("keyboard", "--name", help="Netlist name without file extension"),
     switch_library: str = typer.Option(
-        "perigoso/keyswitch-kicad-library",
-        "-swl",
-        "--switch-library",
-        help="Switch library",
+        "perigoso/keyswitch-kicad-library", "-swl", "--switch-library", help="Switch library",
     ),
     switch_footprint: str = typer.Option(
         "MX", "-swf", "--switch-footprint", help="Switch footprint"
@@ -60,14 +53,10 @@ def main(
     lib_paths: Optional[List[str]] = typer.Option(
         None, "-l", "--lib-path", help="Path to symbol library"
     ),
-    controller_circuit: bool = typer.Option(
-        False,
-        "--controller-circuit",
-        help="Add ATmega32U4-AU minimal circuitry",
+    controller_circuit: str = typer.Option(
+        "atmega32u4_au_v1", "--controller-circuit", help="Add ATmega32U4-AU minimal circuitry",
     ),
-    no_xml: bool = typer.Option(
-        False, "--no-xml", help="Skip xml netlist generation"
-    ),
+    no_xml: bool = typer.Option(False, "--no-xml", help="Skip xml netlist generation"),
     version: bool = typer.Option(
         None,
         "-v",
@@ -89,9 +78,7 @@ def main(
     output.mkdir(exist_ok=True, parents=True)
 
     if not Path(layout).is_file():
-        console.print(
-            f"[red]error:[/] invalid --layout option: [bold]{layout}[/] file not found"
-        )
+        console.print(f"[red]error:[/] invalid --layout option: [bold]{layout}[/] file not found")
         raise typer.Exit(code=1)
 
     with open(layout) as f:
