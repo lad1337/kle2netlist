@@ -94,8 +94,8 @@ ATMEGA32U4AU_PIN_ASSIGN_ORDER = [
     "PF7",
 ]
 
-ELITEC_PIN_ASSIGN_ORDER = [i for i in range(1, 29) if i not in [2, 3, 21, 22, 23, 24]]
-PROMICRO_PIN_ASSIGN_ORDER = [i for i in range(1, 24) if i not in [2, 3, 21, 22, 23, 24]]
+ELITEC_PIN_ASSIGN_ORDER = [i for i in range(1, 29) if i not in [3, 4, 21, 22, 23, 24]]
+PROMICRO_PIN_ASSIGN_ORDER = [i for i in range(1, 24) if i not in [3, 4, 21, 22, 23, 24]]
 
 
 def is_iso_enter(key):
